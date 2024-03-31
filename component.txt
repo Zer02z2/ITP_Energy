@@ -1,0 +1,5 @@
+Sensors:
+    - Air pressure & Altitude - DPS310 Barometric
+    - Light sensitive resistor
+    - Tempretuare & Humidity - Adafruit SHTC3
+    - Air quality - 
