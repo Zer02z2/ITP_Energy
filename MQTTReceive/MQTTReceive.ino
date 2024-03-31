@@ -3,6 +3,7 @@
 
 WiFiClient wifi;
 MqttClient mqtt(wifi);
+//henrique
 
 //WiFi network info: ssid and password
 const char wifi_ssid[] = "sandbox370";
