@@ -99,6 +99,12 @@ void setup() {
 const int sendInterval = 1000;
 void loop() {
 
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    WiFi.begin(wifi_ssid, wifi_pass);
+    delay(1000);
+  }
+
   while (!mqtt.connect(broker, port)) {
     //error codes
     //  -1: credentials rejected
@@ -109,7 +115,7 @@ void loop() {
     delay(200);
   }
 
-  if (digitalRead(button) == HIGH && lastReading == LOW) {
+  if (true || digitalRead(button) == HIGH && lastReading == LOW) {
     
     sensors_event_t humidity, temp, pressure_event;
     shtc3.getEvent(&humidity, &temp);
@@ -139,6 +145,6 @@ void loop() {
     Serial.println("Complete sending");
     count += 1;
   }
-
+  delay(60000);
   lastReading = digitalRead(button);
 }
