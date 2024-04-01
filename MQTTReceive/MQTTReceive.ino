@@ -1,5 +1,8 @@
 #include <ArduinoMqttClient.h>
 #include <WiFiNINA.h>
+#include "Adafruit_Thermal.h"
+
+Adafruit_Thermal printer(&Serial1);      // Or Serial2, Serial3, etc.
 
 WiFiClient wifi;
 MqttClient mqtt(wifi);
@@ -25,6 +28,11 @@ const char subTopic[] = "SolarWall_e/#";
 const int bufferLength = 32;
 
 void setup() {
+  //printer
+  Serial1.begin(19200); // Use this instead if using hardware serial
+  printer.begin();        // Init printer (same regardless of serial type)
+  
+  //reg serial
   Serial.begin(9600);
   Serial.print("Connecting to WiFi");
   while (WiFi.status() != WL_CONNECTED) {
@@ -85,6 +93,11 @@ void loop() {
     //Serial.println(atof(messageBuffer));
  
     Serial.println();
+
+    printer.print(topicName);
+    printer.print(": ");
+    printer.println(messageBuffer);
+
   }
   
 }
