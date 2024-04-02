@@ -1,24 +1,35 @@
-import './style.css'
-import javascriptLogo from './javascript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.js'
+import SamJs from 'sam-js';
 
-document.querySelector('#app').innerHTML = `
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank">
-      <img src="${javascriptLogo}" class="logo vanilla" alt="JavaScript logo" />
-    </a>
-    <h1>Hello Vite!</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite logo to learn more
-    </p>
-  </div>
-`
+let report = "";
 
-setupCounter(document.querySelector('#counter'))
+let opts = {
+  debug: 1,
+  pitch: 60,
+  speed: 92,
+  mouth: 190,
+  throat: 190
+};
+
+let sam = new SamJs(opts);
+
+const socket = new WebSocket('ws://localhost:1880/sensorValues');
+socket.addEventListener('open', () => {
+  console.log("Web socket opened successfully");
+});
+socket.addEventListener('message', handleSocketMessages);
+
+function handleSocketMessages(e) {
+  report += e.data;
+  console.log(e.data);
+
+  if (e.data.substring(0, 3) == "CO2") {
+    console.log(report);
+    sam.speak(report);
+    report = "";
+  }
+}
+
+document.getElementById("test").addEventListener('click', () => {
+  sam.speak('Temperature is 25 degree celcius');
+});
+
