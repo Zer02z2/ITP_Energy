@@ -12,6 +12,15 @@ let opts = {
 
 let sam = new SamJs(opts);
 
+let testButton = document.getElementById("test");
+let getButton = document.getElementById("get");
+let content = document.getElementById("content");
+
+let serverIP = "142.93.244.227";
+let port = 1880;
+let endpoint = "/report";
+const url = `http://${serverIP}:${port}${endpoint}`;
+
 const socket = new WebSocket('ws://localhost:1880/sensorValues');
 socket.addEventListener('open', () => {
   console.log("Web socket opened successfully");
@@ -29,7 +38,15 @@ function handleSocketMessages(e) {
   }
 }
 
-document.getElementById("test").addEventListener('click', () => {
+testButton.addEventListener('click', () => {
   sam.speak('Temperature is 25 degree celcius');
 });
+
+getButton.addEventListener('click', () => {
+  fetch(url)
+    .then(result => result.text())
+    .then((text) => {
+      content.innerHTML = text + "<br>" + content.innerHTML;
+    })
+})
 
