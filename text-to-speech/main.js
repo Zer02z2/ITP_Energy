@@ -12,7 +12,7 @@ let opts = {
 
 let sam = new SamJs(opts);
 
-const socket = new WebSocket('ws://127.0.0.1:1880/sensorValues');
+const socket = new WebSocket('wss://127.0.0.1:1880/sensorValues');
 socket.addEventListener('open', () => {
   console.log("Web socket opened successfully");
 });
