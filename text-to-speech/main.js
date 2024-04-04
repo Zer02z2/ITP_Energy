@@ -24,7 +24,7 @@ const url = `http://${serverIP}:${port}${endpoint}`;
 let endpoint2 = "/soundFile";
 const url2 = `http://${serverIP}:${port}${endpoint2}`;
 
-const socket = new WebSocket('ws://localhost:1880/sensorValues');
+const socket = new WebSocket('ws:142.93.244.227:1880/sensorValues');
 socket.addEventListener('open', () => {
   console.log("Web socket opened successfully");
 });
