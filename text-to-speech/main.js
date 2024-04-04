@@ -21,6 +21,9 @@ let port = 1880;
 let endpoint = "/report";
 const url = `http://${serverIP}:${port}${endpoint}`;
 
+let endpoint2 = "/soundFile";
+const url2 = `http://${serverIP}:${port}${endpoint2}`;
+
 const socket = new WebSocket('ws://localhost:1880/sensorValues');
 socket.addEventListener('open', () => {
   console.log("Web socket opened successfully");
@@ -33,7 +36,8 @@ function handleSocketMessages(e) {
 
   if (e.data.substring(0, 3) == "CO2") {
     console.log(report);
-    sam.speak(report);
+    // sam.speak(report);
+    sendSoundFile(report);
     report = "";
   }
 }
@@ -47,6 +51,14 @@ getButton.addEventListener('click', () => {
     .then(result => result.text())
     .then((text) => {
       content.innerHTML = text + "<br>" + content.innerHTML;
-    })
+    });
 })
 
+function sendSoundFile(report) {
+  let buf8 = sam.buf8(report);
+  fetch(url2, {
+    method: "POST",
+    body: buf8,
+    headers: {"Content-Type": "audio/wav"}
+  });
+}
