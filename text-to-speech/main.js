@@ -36,14 +36,14 @@ function handleSocketMessages(e) {
 
   if (e.data.substring(0, 3) == "CO2") {
     console.log(report);
-    // sam.speak(report);
+    sam.speak(report);
     sendSoundFile(report);
     report = "";
   }
 }
 
 testButton.addEventListener('click', () => {
-  sam.speak('Temperature is 25 degree celcius');
+  // sam.speak('Temperature is 25 degree celcius');
 });
 
 getButton.addEventListener('click', () => {
