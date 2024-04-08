@@ -38,6 +38,7 @@ const char pubTopic[] = "SolarWall_e/";
 const String subTopics[] = {"count/", "humidity/", "temp/", "pressure/", "AQI/", "TVOC/", "CO2/"};
 
 void setup() {
+  Watchdog.enable(5000);
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(sensorSwitch, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
@@ -69,8 +70,8 @@ void setup() {
     mqtt.connect(broker, port);
     delay(200);
   }
-  
   Serial.println("MQTT connected.");
+  Watchdog.reset();
 }
 
 const int sendInterval = 1000;
@@ -126,6 +127,7 @@ void loop() {
     // Serial.println("Going to sleep now");
 
     int sleepMS = Watchdog.sleep(4000);
+    Watchdog.reset();
 
     // ....... sleeping .......
   }
@@ -174,4 +176,5 @@ void initSensors() {
   Serial.print("."); Serial.println(ens160.getBuild());
   Serial.print("\tStandard mode ");
   Serial.println(ens160.setMode(ENS160_OPMODE_STD) ? "done." : "failed!");
+  Watchdog.reset();
 }

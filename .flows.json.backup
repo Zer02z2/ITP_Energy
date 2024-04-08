@@ -8,6 +8,75 @@
         "env": []
     },
     {
+        "id": "450a9c4fd1a77e32",
+        "type": "mqtt in",
+        "z": "7274d2a37cb1887b",
+        "name": "Sensor input",
+        "topic": "SolarWall_e/#",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "7961d7c24e47da7b",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 210,
+        "y": 120,
+        "wires": [
+            [
+                "07a6713532524075"
+            ]
+        ]
+    },
+    {
+        "id": "e472ca9ab5ad418c",
+        "type": "debug",
+        "z": "7274d2a37cb1887b",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 620,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "887a41544e31b3f1",
+        "type": "websocket out",
+        "z": "7274d2a37cb1887b",
+        "name": "Value to browser",
+        "server": "2e733719eb0925d3",
+        "client": "",
+        "x": 670,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "07a6713532524075",
+        "type": "function",
+        "z": "7274d2a37cb1887b",
+        "name": "function 2",
+        "func": "let topic = msg.topic.split(\"/\")[1];\nlet sentence = topic + \" is \" + msg.payload + \". \";\nmsg.payload = sentence;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 440,
+        "y": 120,
+        "wires": [
+            [
+                "887a41544e31b3f1"
+            ]
+        ]
+    },
+    {
         "id": "7961d7c24e47da7b",
         "type": "mqtt-broker",
         "name": "Kai's MQTT",
@@ -43,75 +112,5 @@
         "type": "websocket-listener",
         "path": "/sensorValues",
         "wholemsg": "false"
-    },
-    {
-        "id": "450a9c4fd1a77e32",
-        "type": "mqtt in",
-        "z": "7274d2a37cb1887b",
-        "name": "Sensor input",
-        "topic": "SolarWall_e/#",
-        "qos": "2",
-        "datatype": "auto-detect",
-        "broker": "7961d7c24e47da7b",
-        "nl": false,
-        "rap": true,
-        "rh": 0,
-        "inputs": 0,
-        "x": 210,
-        "y": 120,
-        "wires": [
-            [
-                "07a6713532524075"
-            ]
-        ]
-    },
-    {
-        "id": "e472ca9ab5ad418c",
-        "type": "debug",
-        "z": "7274d2a37cb1887b",
-        "name": "debug 3",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 680,
-        "y": 220,
-        "wires": []
-    },
-    {
-        "id": "887a41544e31b3f1",
-        "type": "websocket out",
-        "z": "7274d2a37cb1887b",
-        "name": "Value to browser",
-        "server": "2e733719eb0925d3",
-        "client": "",
-        "x": 670,
-        "y": 120,
-        "wires": []
-    },
-    {
-        "id": "07a6713532524075",
-        "type": "function",
-        "z": "7274d2a37cb1887b",
-        "name": "function 2",
-        "func": "let topic = msg.topic.split(\"/\")[1];\nlet sentence = topic + \" is \" + msg.payload + \". \";\nmsg.payload = sentence;\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 440,
-        "y": 120,
-        "wires": [
-            [
-                "887a41544e31b3f1",
-                "e472ca9ab5ad418c"
-            ]
-        ]
     }
 ]
