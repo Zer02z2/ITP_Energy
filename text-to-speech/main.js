@@ -16,15 +16,14 @@ let testButton = document.getElementById("test");
 let getButton = document.getElementById("get");
 let content = document.getElementById("content");
 
-let serverIP = "142.93.244.227";
-let port = 1880;
+let serverIP = "io.zongzechen.com";
 let endpoint = "/report";
-const url = `http://${serverIP}:${port}${endpoint}`;
+const url = `https://${serverIP}${endpoint}`;
 
 let endpoint2 = "/soundFile";
-const url2 = `http://${serverIP}:${port}${endpoint2}`;
+const url2 = `https://${serverIP}${endpoint2}`;
 
-const socket = new WebSocket('ws:142.93.244.227:1880/sensorValues');
+const socket = new WebSocket('wss:io.zongzechen.com/sensorValues');
 socket.addEventListener('open', () => {
   console.log("Web socket opened successfully");
 });
@@ -43,7 +42,7 @@ function handleSocketMessages(e) {
 }
 
 testButton.addEventListener('click', () => {
-  // sam.speak('Temperature is 25 degree celcius');
+  sendSoundFile(report);
 });
 
 getButton.addEventListener('click', () => {
@@ -56,6 +55,7 @@ getButton.addEventListener('click', () => {
 
 function sendSoundFile(report) {
   let buf8 = sam.buf8(report);
+  console.log("sending");
   fetch(url2, {
     method: "POST",
     body: buf8,

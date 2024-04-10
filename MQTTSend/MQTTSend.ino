@@ -38,7 +38,7 @@ const char pubTopic[] = "SolarWall_e/";
 const String subTopics[] = {"count/", "humidity/", "temp/", "pressure/", "AQI/", "TVOC/", "CO2/"};
 
 void setup() {
-  Watchdog.enable(5000);
+  Watchdog.enable(8000);
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(sensorSwitch, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
@@ -54,6 +54,7 @@ void setup() {
     delay(1000);
   }
   Serial.println("\nWiFi connected!");
+  Watchdog.reset();
 
   //give your device any name, to use for identification
   mqtt.setId("Zongze's Arduino");
@@ -90,7 +91,7 @@ void loop() {
     Serial.print("MQTT connection failed! Error code = ");
     Serial.println(mqtt.connectError());
     mqtt.connect(broker, port);
-    delay(200);
+    delay(1000);
   }
     
   sensors_event_t humidity, temp, pressure_event;
