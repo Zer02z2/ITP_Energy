@@ -20,8 +20,8 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 150,
-        "y": 120,
+        "x": 550,
+        "y": 140,
         "wires": [
             [
                 "ad9c9360c9c4dc3a",
@@ -30,40 +30,22 @@
         ]
     },
     {
-        "id": "e472ca9ab5ad418c",
-        "type": "debug",
-        "z": "7274d2a37cb1887b",
-        "name": "debug 3",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 960,
-        "y": 280,
-        "wires": []
-    },
-    {
         "id": "07a6713532524075",
         "type": "function",
         "z": "7274d2a37cb1887b",
         "name": "generate sentences",
-        "func": "let topic = msg.topic.split(\"/\")[1];\nlet sentence = topic + \" is \" + msg.payload + \". \";\nmsg.payload = sentence;\n\nif (topic == \"humidity\") {\n    flow.set(\"report\", \"\");\n}\nreturn msg;",
+        "func": "let topic = msg.topic.split(\"/\")[1];\nlet sentence = topic + \" is \" + msg.payload + \". \";\nmsg.payload = sentence;\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 550,
-        "y": 200,
+        "x": 570,
+        "y": 280,
         "wires": [
             [
-                "86b952b4ac8324a0",
-                "287a5ef388160f09"
+                "86b952b4ac8324a0"
             ]
         ]
     },
@@ -72,19 +54,18 @@
         "type": "function",
         "z": "7274d2a37cb1887b",
         "name": "Voice generation",
-        "func": "let SamJs = global.get('SamJs');\n\nlet opts = {\n  debug: 1,\n  pitch: 60,\n  speed: 92,\n  mouth: 190,\n  throat: 190\n};\n\nlet sam = new SamJs(opts);\n\n\nlet report = flow.get(\"report\");\nlet buf8 = sam.buf8(report);\nmsg.payload = buf8;\nreturn msg;",
+        "func": "let sam = flow.get(\"sam\");\n\nlet buf8 = sam.buf8(msg.payload);\n\nlet buffer = Buffer.from(buf8.buffer);\nmsg.payload = buffer;\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
-        "initialize": "",
+        "initialize": "// Code added here will be run once\n// whenever the node is started.\nlet SamJs = global.get('SamJs');\n\nlet opts = {\n    debug: 1,\n    pitch: 60,\n    speed: 92,\n    mouth: 190,\n    throat: 190\n};\n\nlet sam = new SamJs(opts);\n\nflow.set(\"sam\", sam);",
         "finalize": "",
         "libs": [],
-        "x": 590,
-        "y": 300,
+        "x": 570,
+        "y": 400,
         "wires": [
             [
-                "e6ac93f303179728",
-                "e472ca9ab5ad418c"
+                "e6ac93f303179728"
             ]
         ]
     },
@@ -93,7 +74,7 @@
         "type": "function",
         "z": "7274d2a37cb1887b",
         "name": "join sentences",
-        "func": "let report = flow.get(\"report\") || \"\";\n\nlet sentence = msg.payload;\nreport += sentence;\n\nflow.set(\"report\", report);\n\nlet topic = msg.topic.split(\"/\")[1];\nif (topic == \"CO2\") {\n    msg.payload = flow.get(\"report\");\n    return msg;\n}",
+        "func": "let report = flow.get(\"report\") || \"\";\n\nlet sentence = msg.payload;\nreport += sentence;\n\nflow.set(\"report\", report);\n\nlet topic = msg.topic.split(\"/\")[1];\n\nif (topic == \"CO2\" || topic == \"test\") {\n\n    msg.payload = flow.get(\"report\");\n    flow.set(\"report\", \"\");\n    return msg;\n}",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -101,7 +82,7 @@
         "finalize": "",
         "libs": [],
         "x": 760,
-        "y": 200,
+        "y": 280,
         "wires": [
             [
                 "3dedd0349bb5842f",
@@ -129,12 +110,13 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 340,
-        "y": 120,
+        "x": 740,
+        "y": 140,
         "wires": [
             [],
             [
-                "07a6713532524075"
+                "07a6713532524075",
+                "cb6b2d24523001ae"
             ]
         ]
     },
@@ -147,11 +129,12 @@
         "channels": 1,
         "samplerate": "24000",
         "bitwidth": "8",
-        "x": 590,
+        "x": 770,
         "y": 400,
         "wires": [
             [
-                "37513d534fb7c7dc"
+                "37513d534fb7c7dc",
+                "9e5c8778d525a666"
             ],
             []
         ]
@@ -161,14 +144,14 @@
         "type": "file",
         "z": "7274d2a37cb1887b",
         "name": "",
-        "filename": "report.wav",
+        "filename": "/home/zongze/report.wav",
         "filenameType": "str",
         "appendNewline": false,
-        "createDir": false,
+        "createDir": true,
         "overwriteFile": "true",
-        "encoding": "none",
-        "x": 790,
-        "y": 380,
+        "encoding": "utf8",
+        "x": 1010,
+        "y": 400,
         "wires": [
             []
         ]
@@ -180,7 +163,7 @@
         "name": "Send a report once all data is collected",
         "info": "",
         "x": 830,
-        "y": 160,
+        "y": 240,
         "wires": []
     },
     {
@@ -195,24 +178,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1020,
-        "y": 220,
-        "wires": []
-    },
-    {
-        "id": "287a5ef388160f09",
-        "type": "debug",
-        "z": "7274d2a37cb1887b",
-        "name": "debug 5",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 720,
-        "y": 80,
+        "x": 960,
+        "y": 280,
         "wires": []
     },
     {
@@ -227,9 +194,178 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 320,
-        "y": 40,
+        "x": 720,
+        "y": 100,
         "wires": []
+    },
+    {
+        "id": "9e5c8778d525a666",
+        "type": "debug",
+        "z": "7274d2a37cb1887b",
+        "name": "debug 7",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 960,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "cb6b2d24523001ae",
+        "type": "websocket out",
+        "z": "7274d2a37cb1887b",
+        "name": "",
+        "server": "2e733719eb0925d3",
+        "client": "",
+        "x": 1050,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "fa5e5b6aa2d20220",
+        "type": "http in",
+        "z": "7274d2a37cb1887b",
+        "name": "",
+        "url": "/soundFile",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 460,
+        "y": 780,
+        "wires": [
+            [
+                "c9de29ef6fe97d35",
+                "a38ebf0f33710b36"
+            ]
+        ]
+    },
+    {
+        "id": "c9de29ef6fe97d35",
+        "type": "debug",
+        "z": "7274d2a37cb1887b",
+        "name": "debug 8",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 800,
+        "y": 760,
+        "wires": []
+    },
+    {
+        "id": "a38ebf0f33710b36",
+        "type": "http response",
+        "z": "7274d2a37cb1887b",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 810,
+        "y": 800,
+        "wires": []
+    },
+    {
+        "id": "85454ca916179169",
+        "type": "comment",
+        "z": "7274d2a37cb1887b",
+        "name": "Receive MQTT messages",
+        "info": "",
+        "x": 350,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "072a6662fb67226b",
+        "type": "comment",
+        "z": "7274d2a37cb1887b",
+        "name": "Parse the messages into sentences",
+        "info": "",
+        "x": 280,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "60cf0f5780e975e4",
+        "type": "comment",
+        "z": "7274d2a37cb1887b",
+        "name": "Generate sound file",
+        "info": "",
+        "x": 310,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "dd5586ba490259c8",
+        "type": "mqtt out",
+        "z": "7274d2a37cb1887b",
+        "name": "",
+        "topic": "SolarWall_e/test",
+        "qos": "2",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "7961d7c24e47da7b",
+        "x": 840,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "c4944104463b5ee8",
+        "type": "inject",
+        "z": "7274d2a37cb1887b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 340,
+        "y": 660,
+        "wires": [
+            [
+                "c2b1cc0b0c51b427"
+            ]
+        ]
+    },
+    {
+        "id": "c2b1cc0b0c51b427",
+        "type": "function",
+        "z": "7274d2a37cb1887b",
+        "name": "function 1",
+        "func": "let count = flow.get(\"count\") || 0;\n\ncount += 1;\n\nlet message = `this is test number ${count}`;\nmsg.payload = message;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 540,
+        "y": 660,
+        "wires": [
+            [
+                "dd5586ba490259c8"
+            ]
+        ]
     },
     {
         "id": "7961d7c24e47da7b",
@@ -261,5 +397,11 @@
         "willMsg": {},
         "userProps": "",
         "sessionExpiry": ""
+    },
+    {
+        "id": "2e733719eb0925d3",
+        "type": "websocket-listener",
+        "path": "/sensorValues",
+        "wholemsg": "false"
     }
 ]
