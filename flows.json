@@ -20,32 +20,12 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 550,
-        "y": 140,
-        "wires": [
-            [
-                "ad9c9360c9c4dc3a",
-                "7ea5d1f1dcfb7595"
-            ]
-        ]
-    },
-    {
-        "id": "07a6713532524075",
-        "type": "function",
-        "z": "7274d2a37cb1887b",
-        "name": "generate sentences",
-        "func": "let topic = msg.topic.split(\"/\")[1];\nlet sentence = topic + \" is \" + msg.payload + \". \";\nmsg.payload = sentence;\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 570,
+        "x": 430,
         "y": 280,
         "wires": [
             [
-                "86b952b4ac8324a0"
+                "7ea5d1f1dcfb7595",
+                "fc0d2f1f7a911be5"
             ]
         ]
     },
@@ -53,7 +33,7 @@
         "id": "3dedd0349bb5842f",
         "type": "function",
         "z": "7274d2a37cb1887b",
-        "name": "Voice generation",
+        "name": "generate audio buffer",
         "func": "let sam = flow.get(\"sam\");\n\nlet buf8 = sam.buf8(msg.payload);\n\nlet buffer = Buffer.from(buf8.buffer);\nmsg.payload = buffer;\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
@@ -61,32 +41,12 @@
         "initialize": "// Code added here will be run once\n// whenever the node is started.\nlet SamJs = global.get('SamJs');\n\nlet opts = {\n    debug: 1,\n    pitch: 60,\n    speed: 92,\n    mouth: 190,\n    throat: 190\n};\n\nlet sam = new SamJs(opts);\n\nflow.set(\"sam\", sam);",
         "finalize": "",
         "libs": [],
-        "x": 570,
-        "y": 400,
+        "x": 480,
+        "y": 540,
         "wires": [
             [
+                "b0793b5cf1f2a7e0",
                 "e6ac93f303179728"
-            ]
-        ]
-    },
-    {
-        "id": "86b952b4ac8324a0",
-        "type": "function",
-        "z": "7274d2a37cb1887b",
-        "name": "join sentences",
-        "func": "let report = flow.get(\"report\") || \"\";\n\nlet sentence = msg.payload;\nreport += sentence;\n\nflow.set(\"report\", report);\n\nlet topic = msg.topic.split(\"/\")[1];\n\nif (topic == \"CO2\" || topic == \"test\") {\n\n    msg.payload = flow.get(\"report\");\n    flow.set(\"report\", \"\");\n    return msg;\n}",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 760,
-        "y": 280,
-        "wires": [
-            [
-                "3dedd0349bb5842f",
-                "2b72c6e6f7ec55df"
             ]
         ]
     },
@@ -94,7 +54,7 @@
         "id": "ad9c9360c9c4dc3a",
         "type": "switch",
         "z": "7274d2a37cb1887b",
-        "name": "seperate Count",
+        "name": "get rid of Count",
         "property": "topic",
         "propertyType": "msg",
         "rules": [
@@ -110,13 +70,16 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 740,
-        "y": 140,
+        "x": 860,
+        "y": 280,
         "wires": [
-            [],
             [
-                "07a6713532524075",
-                "cb6b2d24523001ae"
+                "de759706317a8a01",
+                "d8710bd74fe7bd7b"
+            ],
+            [
+                "95aec448544a4731",
+                "d8710bd74fe7bd7b"
             ]
         ]
     },
@@ -129,12 +92,13 @@
         "channels": 1,
         "samplerate": "24000",
         "bitwidth": "8",
-        "x": 770,
-        "y": 400,
+        "x": 710,
+        "y": 540,
         "wires": [
             [
                 "37513d534fb7c7dc",
-                "9e5c8778d525a666"
+                "9e5c8778d525a666",
+                "2a0df58ff38b69b8"
             ],
             []
         ]
@@ -143,131 +107,68 @@
         "id": "37513d534fb7c7dc",
         "type": "file",
         "z": "7274d2a37cb1887b",
-        "name": "",
-        "filename": "/home/zongze/report.wav",
+        "name": "write report.wav",
+        "filename": "/home/zongze/ITP-energy/report.wav",
         "filenameType": "str",
         "appendNewline": false,
         "createDir": true,
         "overwriteFile": "true",
-        "encoding": "utf8",
-        "x": 1010,
-        "y": 400,
+        "encoding": "none",
+        "x": 960,
+        "y": 540,
         "wires": [
             []
         ]
     },
     {
-        "id": "0a978a3bd5ae0a94",
-        "type": "comment",
-        "z": "7274d2a37cb1887b",
-        "name": "Send a report once all data is collected",
-        "info": "",
-        "x": 830,
-        "y": 240,
-        "wires": []
-    },
-    {
         "id": "2b72c6e6f7ec55df",
         "type": "debug",
         "z": "7274d2a37cb1887b",
-        "name": "debug 4",
+        "name": "joined sentence",
         "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
-        "complete": "false",
+        "complete": "payload",
+        "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 960,
-        "y": 280,
+        "x": 860,
+        "y": 380,
         "wires": []
     },
     {
         "id": "7ea5d1f1dcfb7595",
         "type": "debug",
         "z": "7274d2a37cb1887b",
-        "name": "debug 6",
-        "active": true,
+        "name": "Individual message",
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
-        "complete": "false",
+        "complete": "payload",
+        "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 720,
-        "y": 100,
+        "x": 650,
+        "y": 240,
         "wires": []
     },
     {
         "id": "9e5c8778d525a666",
         "type": "debug",
         "z": "7274d2a37cb1887b",
-        "name": "debug 7",
-        "active": true,
+        "name": "audio buffer",
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
-        "complete": "false",
+        "complete": "payload",
+        "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 960,
-        "y": 360,
-        "wires": []
-    },
-    {
-        "id": "cb6b2d24523001ae",
-        "type": "websocket out",
-        "z": "7274d2a37cb1887b",
-        "name": "",
-        "server": "2e733719eb0925d3",
-        "client": "",
-        "x": 1050,
-        "y": 140,
-        "wires": []
-    },
-    {
-        "id": "fa5e5b6aa2d20220",
-        "type": "http in",
-        "z": "7274d2a37cb1887b",
-        "name": "",
-        "url": "/soundFile",
-        "method": "post",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 460,
-        "y": 780,
-        "wires": [
-            [
-                "c9de29ef6fe97d35",
-                "a38ebf0f33710b36"
-            ]
-        ]
-    },
-    {
-        "id": "c9de29ef6fe97d35",
-        "type": "debug",
-        "z": "7274d2a37cb1887b",
-        "name": "debug 8",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 800,
-        "y": 760,
-        "wires": []
-    },
-    {
-        "id": "a38ebf0f33710b36",
-        "type": "http response",
-        "z": "7274d2a37cb1887b",
-        "name": "",
-        "statusCode": "",
-        "headers": {},
-        "x": 810,
-        "y": 800,
+        "x": 950,
+        "y": 500,
         "wires": []
     },
     {
@@ -276,8 +177,8 @@
         "z": "7274d2a37cb1887b",
         "name": "Receive MQTT messages",
         "info": "",
-        "x": 350,
-        "y": 140,
+        "x": 130,
+        "y": 280,
         "wires": []
     },
     {
@@ -286,8 +187,8 @@
         "z": "7274d2a37cb1887b",
         "name": "Parse the messages into sentences",
         "info": "",
-        "x": 280,
-        "y": 280,
+        "x": 160,
+        "y": 420,
         "wires": []
     },
     {
@@ -296,8 +197,8 @@
         "z": "7274d2a37cb1887b",
         "name": "Generate sound file",
         "info": "",
-        "x": 310,
-        "y": 400,
+        "x": 110,
+        "y": 540,
         "wires": []
     },
     {
@@ -314,8 +215,8 @@
         "correl": "",
         "expiry": "",
         "broker": "7961d7c24e47da7b",
-        "x": 840,
-        "y": 660,
+        "x": 800,
+        "y": 120,
         "wires": []
     },
     {
@@ -339,8 +240,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 340,
-        "y": 660,
+        "x": 440,
+        "y": 120,
         "wires": [
             [
                 "c2b1cc0b0c51b427"
@@ -352,20 +253,548 @@
         "type": "function",
         "z": "7274d2a37cb1887b",
         "name": "function 1",
-        "func": "let count = flow.get(\"count\") || 0;\n\ncount += 1;\n\nlet message = `this is test number ${count}`;\nmsg.payload = message;\nreturn msg;",
+        "func": "let count = flow.get(\"count\") || 0;\n\ncount += 1;\n\nflow.set(\"count\", count);\n\nlet message = `this is test number ${count}`;\nmsg.payload = message;\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 540,
-        "y": 660,
+        "x": 600,
+        "y": 120,
         "wires": [
             [
                 "dd5586ba490259c8"
             ]
         ]
+    },
+    {
+        "id": "65f0159fa6cffaf7",
+        "type": "comment",
+        "z": "7274d2a37cb1887b",
+        "name": "Click here to send a test message",
+        "info": "",
+        "x": 160,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "9e94a0f45ce18087",
+        "type": "http in",
+        "z": "7274d2a37cb1887b",
+        "name": "Request audio file",
+        "url": "/getAudio",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 470,
+        "y": 680,
+        "wires": [
+            [
+                "f8f5f10629b78833"
+            ]
+        ]
+    },
+    {
+        "id": "f8f5f10629b78833",
+        "type": "file in",
+        "z": "7274d2a37cb1887b",
+        "name": "read report.wav",
+        "filename": "/home/zongze/ITP-energy/report.wav",
+        "filenameType": "str",
+        "format": "",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 700,
+        "y": 680,
+        "wires": [
+            [
+                "442a1eade97a46aa"
+            ]
+        ]
+    },
+    {
+        "id": "6c6dc7bdce9dd6fc",
+        "type": "http response",
+        "z": "7274d2a37cb1887b",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 1070,
+        "y": 680,
+        "wires": []
+    },
+    {
+        "id": "442a1eade97a46aa",
+        "type": "change",
+        "z": "7274d2a37cb1887b",
+        "name": "Add header",
+        "rules": [
+            {
+                "t": "set",
+                "p": "headers",
+                "pt": "msg",
+                "to": "{}",
+                "tot": "json"
+            },
+            {
+                "t": "set",
+                "p": "headers.content-type",
+                "pt": "msg",
+                "to": "audio/wav",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 890,
+        "y": 680,
+        "wires": [
+            [
+                "6c6dc7bdce9dd6fc",
+                "8d96d6eb68757420"
+            ]
+        ]
+    },
+    {
+        "id": "8d96d6eb68757420",
+        "type": "debug",
+        "z": "7274d2a37cb1887b",
+        "name": "debug 8",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1080,
+        "y": 640,
+        "wires": []
+    },
+    {
+        "id": "06ba7c73b5dd9d8f",
+        "type": "http request",
+        "z": "7274d2a37cb1887b",
+        "name": "",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://io.zongzechen.com/getAudio",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 650,
+        "y": 940,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "4f3dc3390e2580e4",
+        "type": "inject",
+        "z": "7274d2a37cb1887b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 440,
+        "y": 940,
+        "wires": [
+            [
+                "06ba7c73b5dd9d8f"
+            ]
+        ]
+    },
+    {
+        "id": "6c1b598d8bed95d4",
+        "type": "file",
+        "z": "7274d2a37cb1887b",
+        "name": "write data.txt",
+        "filename": "/home/zongze/ITP-energy/data.txt",
+        "filenameType": "str",
+        "appendNewline": true,
+        "createDir": false,
+        "overwriteFile": "false",
+        "encoding": "none",
+        "x": 1470,
+        "y": 280,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "14d4ea7d20e1aef1",
+        "type": "http in",
+        "z": "7274d2a37cb1887b",
+        "name": "",
+        "url": "/getData",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 450,
+        "y": 820,
+        "wires": [
+            [
+                "cc719ed2d1cdf258"
+            ]
+        ]
+    },
+    {
+        "id": "cc719ed2d1cdf258",
+        "type": "file in",
+        "z": "7274d2a37cb1887b",
+        "name": "read data.txt",
+        "filename": "/home/zongze/ITP-energy/data.txt",
+        "filenameType": "str",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": true,
+        "x": 650,
+        "y": 820,
+        "wires": [
+            [
+                "a6bdbb2db3a1595d"
+            ]
+        ]
+    },
+    {
+        "id": "ab7b716e9adbf3b3",
+        "type": "http response",
+        "z": "7274d2a37cb1887b",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 1030,
+        "y": 820,
+        "wires": []
+    },
+    {
+        "id": "a6bdbb2db3a1595d",
+        "type": "change",
+        "z": "7274d2a37cb1887b",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "headers",
+                "pt": "msg",
+                "to": "text/plain",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 850,
+        "y": 820,
+        "wires": [
+            [
+                "ab7b716e9adbf3b3"
+            ]
+        ]
+    },
+    {
+        "id": "2a0df58ff38b69b8",
+        "type": "websocket out",
+        "z": "7274d2a37cb1887b",
+        "name": "",
+        "server": "2b2a4ab97967c38d",
+        "client": "",
+        "x": 950,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "7312229c6266f56d",
+        "type": "join",
+        "z": "7274d2a37cb1887b",
+        "name": "joining MQTTS",
+        "mode": "custom",
+        "build": "object",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "accumulate": false,
+        "timeout": "5",
+        "count": "",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "",
+        "reduceFixup": "",
+        "x": 1280,
+        "y": 280,
+        "wires": [
+            [
+                "6c1b598d8bed95d4",
+                "2ed29bb7b4a198e3"
+            ]
+        ]
+    },
+    {
+        "id": "fc0d2f1f7a911be5",
+        "type": "function",
+        "z": "7274d2a37cb1887b",
+        "name": "clean up topic",
+        "func": "msg.topic = msg.topic.split(\"/\")[1];\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 640,
+        "y": 280,
+        "wires": [
+            [
+                "ad9c9360c9c4dc3a"
+            ]
+        ]
+    },
+    {
+        "id": "d72734c51a9183ca",
+        "type": "function",
+        "z": "7274d2a37cb1887b",
+        "name": "generate report",
+        "func": "let report = \"\";\n\nfor (const [topic, value] of Object.entries(msg.payload)) {\n    report += `${topic} is ${value}. `;\n}\n\nmsg.payload = report;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 640,
+        "y": 420,
+        "wires": [
+            [
+                "3dedd0349bb5842f",
+                "2b72c6e6f7ec55df",
+                "10414433f3bdeeb0"
+            ]
+        ]
+    },
+    {
+        "id": "95aec448544a4731",
+        "type": "join",
+        "z": "7274d2a37cb1887b",
+        "name": "joining MQTTS",
+        "mode": "custom",
+        "build": "object",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "accumulate": false,
+        "timeout": "1",
+        "count": "",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "",
+        "reduceFixup": "",
+        "x": 460,
+        "y": 420,
+        "wires": [
+            [
+                "d72734c51a9183ca"
+            ]
+        ]
+    },
+    {
+        "id": "637fb2ce2ef424df",
+        "type": "comment",
+        "z": "7274d2a37cb1887b",
+        "name": "write to data base",
+        "info": "",
+        "x": 1110,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "de759706317a8a01",
+        "type": "function",
+        "z": "7274d2a37cb1887b",
+        "name": "inject time",
+        "func": "msg.topic = \"time\";\nlet timeNow = new Date(Date.now() - 4 * 60 * 60 * 1000).toLocaleString();\nmsg.payload = timeNow;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1090,
+        "y": 240,
+        "wires": [
+            [
+                "7312229c6266f56d"
+            ]
+        ]
+    },
+    {
+        "id": "2ed29bb7b4a198e3",
+        "type": "debug",
+        "z": "7274d2a37cb1887b",
+        "name": "joined object",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1470,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "d8710bd74fe7bd7b",
+        "type": "delay",
+        "z": "7274d2a37cb1887b",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "0.2",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 1090,
+        "y": 280,
+        "wires": [
+            [
+                "7312229c6266f56d"
+            ]
+        ]
+    },
+    {
+        "id": "10414433f3bdeeb0",
+        "type": "websocket out",
+        "z": "7274d2a37cb1887b",
+        "name": "to browser",
+        "server": "2e733719eb0925d3",
+        "client": "",
+        "x": 850,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "b0793b5cf1f2a7e0",
+        "type": "debug",
+        "z": "7274d2a37cb1887b",
+        "name": "buffer from node",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 710,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "d0e680da8c59278e",
+        "type": "comment",
+        "z": "7274d2a37cb1887b",
+        "name": "Serve the audio file",
+        "info": "",
+        "x": 110,
+        "y": 680,
+        "wires": []
+    },
+    {
+        "id": "08db329afdb6d828",
+        "type": "comment",
+        "z": "7274d2a37cb1887b",
+        "name": "Serve the data file",
+        "info": "",
+        "x": 110,
+        "y": 820,
+        "wires": []
+    },
+    {
+        "id": "1fd1fce710534a9f",
+        "type": "http in",
+        "z": "7274d2a37cb1887b",
+        "name": "",
+        "url": "/soundFile",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 460,
+        "y": 1020,
+        "wires": [
+            [
+                "69551584a47ba966",
+                "200330bb112b3a82"
+            ]
+        ]
+    },
+    {
+        "id": "69551584a47ba966",
+        "type": "debug",
+        "z": "7274d2a37cb1887b",
+        "name": "buffer from browser",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 690,
+        "y": 1080,
+        "wires": []
+    },
+    {
+        "id": "200330bb112b3a82",
+        "type": "http response",
+        "z": "7274d2a37cb1887b",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 670,
+        "y": 1020,
+        "wires": []
     },
     {
         "id": "7961d7c24e47da7b",
@@ -397,6 +826,12 @@
         "willMsg": {},
         "userProps": "",
         "sessionExpiry": ""
+    },
+    {
+        "id": "2b2a4ab97967c38d",
+        "type": "websocket-listener",
+        "path": "/buffer",
+        "wholemsg": "false"
     },
     {
         "id": "2e733719eb0925d3",

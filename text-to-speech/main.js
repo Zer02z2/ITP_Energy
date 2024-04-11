@@ -30,15 +30,8 @@ socket.addEventListener('open', () => {
 socket.addEventListener('message', handleSocketMessages);
 
 function handleSocketMessages(e) {
-  report += e.data;
   console.log(e.data);
-
-  if (e.data.substring(0, 3) == "CO2") {
-    console.log(report);
-    sam.speak(report);
-    sendSoundFile(report);
-    report = "";
-  }
+  sendSoundFile(e.data);
 }
 
 testButton.addEventListener('click', () => {
