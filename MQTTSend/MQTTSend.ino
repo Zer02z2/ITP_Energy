@@ -13,7 +13,7 @@ ScioSense_ENS160      ens160(ENS160_I2CADDR_1);
 
 float count = 0;
 int sleepDuration = 4000;
-int sleepGoal = 40000;
+int sleepGoal = 80000;
 
 int sensorSwitch = 2;
 
@@ -68,7 +68,6 @@ void setup() {
     //  -2: can't connect to broker
     Serial.print("MQTT connection failed! Error code = ");
     Serial.println(mqtt.connectError());
-    mqtt.connect(broker, port);
     delay(200);
   }
   Serial.println("MQTT connected.");
@@ -78,20 +77,12 @@ void setup() {
 const int sendInterval = 1000;
 void loop() {
 
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(".");
-    WiFi.begin(wifi_ssid, wifi_pass);
-    delay(1000);
+  if (WiFi.status() != WL_CONNECTED) {
+    while(1) delay(1000);
   }
 
-  while (!mqtt.connect(broker, port)) {
-    //error codes
-    //  -1: credentials rejected
-    //  -2: can't connect to broker
-    Serial.print("MQTT connection failed! Error code = ");
-    Serial.println(mqtt.connectError());
-    mqtt.connect(broker, port);
-    delay(1000);
+  if (!mqtt.connect(broker, port)) {
+    while (1) delay(1000);
   }
     
   sensors_event_t humidity, temp, pressure_event;
