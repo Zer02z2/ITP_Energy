@@ -38,14 +38,12 @@ const char pubTopic[] = "SolarWall_e/";
 const String subTopics[] = { "count/", "humidity/", "temp/", "pressure/", "AQI/", "TVOC/", "CO2/" };
 
 void setup() {
-  Watchdog.enable(6000);
+  Watchdog.enable(8000);
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(sensorSwitch, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
   digitalWrite(sensorSwitch, HIGH);
   Serial.begin(115200);
-
-  initSensors();
 
   Serial.print("Connecting to WiFi");
   while (WiFi.status() != WL_CONNECTED) {
@@ -54,7 +52,6 @@ void setup() {
     delay(1000);
   }
   Serial.println("\nWiFi connected!");
-  Watchdog.reset();
 
   //give your device any name, to use for identification
   mqtt.setId("Zongze's Arduino");
@@ -72,9 +69,10 @@ void setup() {
   }
   Serial.println("MQTT connected.");
   Watchdog.reset();
+
+  initSensors();
 }
 
-const int sendInterval = 1000;
 void loop() {
 
   if (WiFi.status() == WL_CONNECTED && mqtt.connect(broker, port)) {
@@ -108,14 +106,17 @@ void loop() {
     digitalWrite(sensorSwitch, LOW);
     digitalWrite(LED_BUILTIN, LOW);
 
+    Watchdog.disable();
+
     for (int i = 0; i < sleepGoal; i += sleepDuration) {
       // Serial.println("Going to sleep now");
 
       int sleepMS = Watchdog.sleep(4000);
-      Watchdog.reset();
 
       // ....... sleeping .......
     }
+
+    Watchdog.enable(8000);
 
     digitalWrite(LED_BUILTIN, HIGH);
     digitalWrite(sensorSwitch, HIGH);
@@ -165,5 +166,4 @@ void initSensors() {
   Serial.println(ens160.getBuild());
   Serial.print("\tStandard mode ");
   Serial.println(ens160.setMode(ENS160_OPMODE_STD) ? "done." : "failed!");
-  Watchdog.reset();
 }

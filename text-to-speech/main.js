@@ -1,4 +1,30 @@
 import SamJs from 'sam-js';
+import converter from 'number-to-words';
+
+let timeNow = new Date(Date.now() - 4 * 60 * 60 * 1000).toLocaleString();
+let months = ["January", "Feburary", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+let [dateAndYear, time] = timeNow.split(", ");
+let [month, date, year] = dateAndYear.split("/");
+let [hour, min, sec, amOrpm] = time.split(/[: ]/);
+console.log(month, date, year, hour, min, sec, amOrpm);
+
+month = months[parseInt(month) - 1];
+date = converter.toWordsOrdinal(parseInt(date));
+let [year1, year2] = [year.slice(0, 2), year.slice(2, 4)];
+console.log(year1, year2);
+year1 = converter.toWords(parseInt(year1));
+year2 = converter.toWords(parseInt(year2));
+year = year1 + " " + year2;
+dateAndYear = month + " " + date + ", " + year;
+
+hour = converter.toWords(parseInt(hour));
+min = converter.toWords(parseInt(min));
+amOrpm = amOrpm.slice(0, 1) + "-" + amOrpm.slice(1, 2);
+time = hour + ", " + min + " " + amOrpm;
+
+let message = "Now it is " + time + ", " + dateAndYear + ". This is Wall li reporting. ";
+console.log(message);
 
 let report = "";
 
