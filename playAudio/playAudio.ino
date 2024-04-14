@@ -2,6 +2,7 @@
 #include <SPI.h>
 #include <Adafruit_VS1053.h>
 #include <SD.h>
+#include "AudioTools.h"
 #include "arduino_secrets.h"
 
 // define the pins used
@@ -25,11 +26,12 @@
 // DREQ should be an Int pin, see http://arduino.cc/en/Reference/attachInterrupt
 #define DREQ 3  // VS1053 Data request, ideally an Interrupt pin
 
-File myFile;
-
 /////// WiFi Settings ///////
 char ssid[] = SECRET_SSID;
 char pass[] = SECRET_PASS;
+URLStream url(ssid, pass);
+StreamCopy copier;
+File myFile;
 
 char serverAddress[] = "io.zongzechen.com";  // server IP address
 int port = 443;                              //HTTP default is 80, or use 1880 for node-red
@@ -46,6 +48,7 @@ Adafruit_VS1053_FilePlayer musicPlayer =
 
 void setup() {
   Serial.begin(9600);
+  AudioLogger::instance().begin(Serial, AudioLogger::Info);
   Serial.println("Adafruit VS1053 Simple Test");
 
   while (status != WL_CONNECTED) {
@@ -114,22 +117,29 @@ void loop() {
     }
 
     if (c == 'g') {
-      myFile = SD.open(serverAddress, port);
-      Serial.println("connecting to server...");
+      
+      // Serial.println("connecting to server...");
 
-      if (client.connectSSL("io.zongzechen.com", 443)) {
-        client.println("GET /getAudio HTTP/1.1");
-        client.println("Host: io.zongzechen.com");
-        Serial.println("Host");
-        client.println("Connection: close");
-        client.println();
-        Serial.println("Request sent");
-      } else {
-        Serial.println("connection failed");
-      }
-      Serial.println("writing file...");
+      // if (client.connectSSL(serverAddress, port) {
+      //   client.println("GET /getAudio HTTP/1.1");
+      //   client.println("Host: io.zongzechen.com");
+      //   Serial.println("Host");
+      //   client.println("Connection: close");
+      //   client.println();
+      //   Serial.println("Request sent");
+      // } else {
+      //   Serial.println("connection failed");
+      // }
 
-      Serial.println("finished writing file.");
+      Serial.println("begin writing file...");
+      url.begin("https://io.zongzechen.com/getAudio");
+
+      myFile = SD.open("/report.wav", FILE_WRITE);
+      myFile.seek(0);
+      copier.begin(myFile, url);
+      copier.copyAll();
+      myFile.close();
+      Serial.println("finished writing.");
     }
   }
 
