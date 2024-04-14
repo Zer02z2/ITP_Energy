@@ -1,4 +1,3 @@
-#include <ArduinoHttpClient.h>
 #include <WiFiNINA.h>
 #include <SPI.h>
 #include <Adafruit_VS1053.h>
@@ -130,7 +129,7 @@ void loop() {
 
       char endpoint[] = "/getAudio";  //put your endpoint here
 
-      if (wifi.connect("io.zongzechen.com", port)) {
+      if (wifi.connectSSL("io.zongzechen.com", 443)) {
         Serial.println("Request started");
         wifi.println("GET /getAudio HTTP/1.1");
         Serial.println("GET");
