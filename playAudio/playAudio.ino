@@ -34,7 +34,7 @@ char pass[] = SECRET_PASS;
 char serverAddress[] = "io.zongzechen.com";  // server IP address
 int port = 443;                              //HTTP default is 80, or use 1880 for node-red
 
-WiFiSSLClient wifi;
+WiFiSSLClient client;
 //HttpClient client = HttpClient(wifi, serverAddress, port);
 int status = WL_IDLE_STATUS;
 
@@ -69,8 +69,6 @@ void setup() {
       ;  // don't do anything more
   }
 
-  myFile = SD.open("report.wav", FILE_WRITE);
-
 
   // list files
   printDirectory(SD.open("/"), 0);
@@ -85,26 +83,20 @@ void setup() {
   // audio playing
   musicPlayer.useInterrupt(VS1053_FILEPLAYER_PIN_INT);  // DREQ int
 
-  // Play one file, don't return until complete
-  Serial.println(F("Playing track 001"));
-  //musicPlayer.playFullFile("/track001.mp3");
-  // Play another file in the background, REQUIRES interrupts!
-  //Serial.println(F("Playing track 002"));
-  musicPlayer.startPlayingFile("/track002.mp3");
+  //musicPlayer.startPlayingFile("/track002.mp3");
 }
 
 void loop() {
-
-  //to parse response into a number (if needed):
-  //  float responseFloat = response.toFloat();
-  //  int responseInt = response.toInt();
-  // File is playing in the background
-  if (musicPlayer.stopped()) {
-    Serial.println("Done playing music");
-    while (1) {
-      delay(10);  // we're done! do nothing...
-    }
+  while (client.available()) {
+    char c = client.read();
+    //myFile.write(c);
+    Serial.write(c);
   }
+
+
+  if (musicPlayer.stopped()) {
+  }
+
   if (Serial.available()) {
     char c = Serial.read();
 
@@ -115,43 +107,29 @@ void loop() {
 
     // if we get an 'p' on the serial console, pause/unpause!
     if (c == 'p') {
-      if (!musicPlayer.paused()) {
-        Serial.println("Paused");
-        musicPlayer.pausePlaying(true);
-      } else {
-        Serial.println("Resumed");
-        musicPlayer.pausePlaying(false);
+      if (!musicPlayer.stopped()) {
+        musicPlayer.startPlayingFile("/report.wav");
+        Serial.println("now playing");
       }
     }
 
     if (c == 'g') {
-      Serial.println("making GET request");
+      myFile = SD.open(serverAddress, port);
+      Serial.println("connecting to server...");
 
-      char endpoint[] = "/getAudio";  //put your endpoint here
-
-      if (wifi.connectSSL("io.zongzechen.com", 443)) {
-        Serial.println("Request started");
-        wifi.println("GET /getAudio HTTP/1.1");
-        Serial.println("GET");
-        wifi.println("Host: io.zongzechen.com");
+      if (client.connectSSL("io.zongzechen.com", 443)) {
+        client.println("GET /getAudio HTTP/1.1");
+        client.println("Host: io.zongzechen.com");
         Serial.println("Host");
-        wifi.println("Connection: close");
-        wifi.println();
+        client.println("Connection: close");
+        client.println();
         Serial.println("Request sent");
+      } else {
+        Serial.println("connection failed");
       }
-      else {
-         Serial.println("else");
-      }
-      //client.get(endpoint);
+      Serial.println("writing file...");
 
-      // read the status code and body of the response
-      // int statusCode = client.responseStatusCode();
-      // String response = client.responseBody();
-
-      // Serial.print("Status code: ");
-      // Serial.println(statusCode);
-      // Serial.print("Response: ");
-      // Serial.println(response);
+      Serial.println("finished writing file.");
     }
   }
 
