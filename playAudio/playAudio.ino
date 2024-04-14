@@ -32,11 +32,11 @@ File myFile;
 char ssid[] = SECRET_SSID;
 char pass[] = SECRET_PASS;
 
-char serverAddress[] = "https://io.zongzechen.com";  // server IP address
-int port = 443;                               //HTTP default is 80, or use 1880 for node-red
+char serverAddress[] = "io.zongzechen.com";  // server IP address
+int port = 443;                              //HTTP default is 80, or use 1880 for node-red
 
-WiFiClient wifi;
-HttpClient client = HttpClient(wifi, serverAddress, port);
+WiFiSSLClient wifi;
+//HttpClient client = HttpClient(wifi, serverAddress, port);
 int status = WL_IDLE_STATUS;
 
 Adafruit_VS1053_FilePlayer musicPlayer =
@@ -129,16 +129,30 @@ void loop() {
       Serial.println("making GET request");
 
       char endpoint[] = "/getAudio";  //put your endpoint here
-      client.get(endpoint);
+
+      if (wifi.connect("io.zongzechen.com", port)) {
+        Serial.println("Request started");
+        wifi.println("GET /getAudio HTTP/1.1");
+        Serial.println("GET");
+        wifi.println("Host: io.zongzechen.com");
+        Serial.println("Host");
+        wifi.println("Connection: close");
+        wifi.println();
+        Serial.println("Request sent");
+      }
+      else {
+         Serial.println("else");
+      }
+      //client.get(endpoint);
 
       // read the status code and body of the response
-      int statusCode = client.responseStatusCode();
-      String response = client.responseBody();
+      // int statusCode = client.responseStatusCode();
+      // String response = client.responseBody();
 
-      Serial.print("Status code: ");
-      Serial.println(statusCode);
-      Serial.print("Response: ");
-      Serial.println(response);
+      // Serial.print("Status code: ");
+      // Serial.println(statusCode);
+      // Serial.print("Response: ");
+      // Serial.println(response);
     }
   }
 
