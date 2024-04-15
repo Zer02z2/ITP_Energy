@@ -87,7 +87,7 @@ void loop() {
 
     float values[] = { count, humidity.relative_humidity, temp.temperature, pressure_event.pressure,
                        ens160.getAQI(), ens160.getTVOC(), ens160.geteCO2(), as7341.getChannel(AS7341_CHANNEL_CLEAR)};
-    String units[] = { "", " gram per kilogram", " degree celcius", " h-P-a", "", " p-p-b", "p-p-m", "" };
+    String units[] = { "", " g/kg", " C", " hPa", "", " ppb", "ppm", "" };
 
     Serial.println("Starting sending MQTT...");
 
