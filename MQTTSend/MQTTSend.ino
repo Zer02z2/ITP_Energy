@@ -2,14 +2,16 @@
 #include <WiFiNINA.h>
 #include "Adafruit_SHTC3.h"
 #include <Adafruit_DPS310.h>
+#include <Adafruit_AS7341.h>
 #include <Wire.h>
 #include "ScioSense_ENS160.h"
 #include <Adafruit_SleepyDog.h>
 
 Adafruit_SHTC3 shtc3 = Adafruit_SHTC3();  // humidity
-Adafruit_DPS310 dps;
+Adafruit_DPS310 dps;                      // pressure
 Adafruit_Sensor *dps_pressure = dps.getPressureSensor();
-ScioSense_ENS160 ens160(ENS160_I2CADDR_1);
+ScioSense_ENS160 ens160(ENS160_I2CADDR_1);  //Gas sensor
+Adafruit_AS7341 as7341;                     // light
 
 float count = 0;
 int sleepDuration = 4000;
@@ -33,9 +35,9 @@ const char mqtt_user[] = "energy";
 const char mqtt_pass[] = "password";
 
 //the topic this device will publish messages to
-const int numOfTopics = 7;
+const int numOfTopics = 8;
 const char pubTopic[] = "SolarWall_e/";
-const String subTopics[] = { "count/", "humidity/", "temp/", "pressure/", "AQI/", "TVOC/", "CO2/" };
+const String subTopics[] = { "count/", "humidity/", "temp/", "pressure/", "AQI/", "TVOC/", "CO2/", "light/" };
 
 void setup() {
   Watchdog.enable(8000);
@@ -81,10 +83,11 @@ void loop() {
     dps_pressure->getEvent(&pressure_event);
     ens160.measure(true);
     ens160.measureRaw(true);
+    as7341.readAllChannels();
 
     float values[] = { count, humidity.relative_humidity, temp.temperature, pressure_event.pressure,
-                       ens160.getAQI(), ens160.getTVOC(), ens160.geteCO2() };
-    String units[] = { "", " g/kg", " C", " hPa", "", "ppb", "ppm" };
+                       ens160.getAQI(), ens160.getTVOC(), ens160.geteCO2(), as7341.getChannel(AS7341_CHANNEL_CLEAR)};
+    String units[] = { "", " gram per kilogram", " degree celcius", " h-P-a", "", " p-p-b", "p-p-m", "" };
 
     Serial.println("Starting sending MQTT...");
 
@@ -166,4 +169,14 @@ void initSensors() {
   Serial.println(ens160.getBuild());
   Serial.print("\tStandard mode ");
   Serial.println(ens160.setMode(ENS160_OPMODE_STD) ? "done." : "failed!");
+
+  // init AS7341
+  if (!as7341.begin()) {
+    Serial.println("Could not find AS7341");
+    while (1) { delay(10); }
+  }
+
+  as7341.setATIME(100);
+  as7341.setASTEP(999);
+  as7341.setGain(AS7341_GAIN_256X);
 }
