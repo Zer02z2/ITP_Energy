@@ -89,9 +89,13 @@ void setup() {
 
 void loop() {
   while (client.available()) {
-    char c = client.read();
-    myFile.write(c);
-    //Serial.write(c);
+    int length = client.available();
+    byte buffer[length];
+    client.readBytes(buffer, length);
+    Serial.println(client.available());
+    //char c = client.read();
+    myFile.write(buffer, length);
+    // Serial.write(c);
   }
   if (musicPlayer.stopped()) {
   }
@@ -101,6 +105,7 @@ void loop() {
 
     // if we get an 's' on the serial console, stop!
     if (c == 's') {
+      myFile.close();
       musicPlayer.stopPlaying();
     }
 
