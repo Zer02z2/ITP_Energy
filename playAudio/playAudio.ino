@@ -27,6 +27,7 @@
 
 File myFile;
 
+
 /////// WiFi Settings ///////
 char ssid[] = SECRET_SSID;
 char pass[] = SECRET_PASS;
@@ -89,11 +90,9 @@ void setup() {
 void loop() {
   while (client.available()) {
     char c = client.read();
-    //myFile.write(c);
-    Serial.write(c);
+    myFile.write(c);
+    //Serial.write(c);
   }
-
-
   if (musicPlayer.stopped()) {
   }
 
@@ -107,14 +106,16 @@ void loop() {
 
     // if we get an 'p' on the serial console, pause/unpause!
     if (c == 'p') {
-      if (!musicPlayer.stopped()) {
-        musicPlayer.startPlayingFile("/report.wav");
-        Serial.println("now playing");
-      }
+      // if (!musicPlayer.stopped()) {
+      //   musicPlayer.startPlayingFile("/report.wav");
+      //   Serial.println("now playing");
+      // }
+      myFile.close();
+      printDirectory(SD.open("/"), 0);
     }
 
     if (c == 'g') {
-      myFile = SD.open(serverAddress, port);
+      if (SD.exists("/report.wav")) {SD.remove("/report.wav");};
       Serial.println("connecting to server...");
 
       if (client.connectSSL("io.zongzechen.com", 443)) {
@@ -124,12 +125,19 @@ void loop() {
         client.println("Connection: close");
         client.println();
         Serial.println("Request sent");
+
+        while (!client.available()) { delay(1); };
+
+        myFile = SD.open("/report.wav", FILE_WRITE);
+        Serial.println("start writing file...");
+
+        
+        //Serial.println("finish writing file");
+        //myFile.close();
+        //printDirectory(SD.open("/"), 0);
       } else {
         Serial.println("connection failed");
       }
-      Serial.println("writing file...");
-
-      Serial.println("finished writing file.");
     }
   }
 
