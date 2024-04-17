@@ -14,8 +14,8 @@ ScioSense_ENS160 ens160(ENS160_I2CADDR_1);  //Gas sensor
 Adafruit_AS7341 as7341;                     // light
 
 float count = 0;
-int sleepDuration = 4000;
-int sleepGoal = 80000;
+int sleepDuration = 5000;
+int sleepGoal = 300000;
 
 int sensorSwitch = 2;
 
@@ -35,9 +35,12 @@ const char mqtt_user[] = "energy";
 const char mqtt_pass[] = "password";
 
 //the topic this device will publish messages to
-const int numOfTopics = 8;
-const char pubTopic[] = "SolarWall_e/";
-const String subTopics[] = { "count/", "humidity/", "temp/", "pressure/", "AQI/", "TVOC/", "CO2/", "light/" };
+const int numOfTopics = 17;
+const char pubTopic[] = "Sun-Watcher-01/";
+const String subTopics[] = { "count/", "humidity/", "temp/", "pressure/", "AQI/", "TVOC/",
+                            "CO2/", "light-415nm/", "light-445nm/", "light-480nm/",
+                            "light-515nm/", "light-555nm/", "light-590nm/", "light-630nm/",
+                            "light-680nm/", "light-clear/", "light-NIR/" };
 
 void setup() {
   Watchdog.enable(8000);
@@ -83,11 +86,15 @@ void loop() {
     dps_pressure->getEvent(&pressure_event);
     ens160.measure(true);
     ens160.measureRaw(true);
-    as7341.readAllChannels();
+    uint16_t readings[12];
+    as7341.readAllChannels(readings);
 
     float values[] = { count, humidity.relative_humidity, temp.temperature, pressure_event.pressure,
-                       ens160.getAQI(), ens160.getTVOC(), ens160.geteCO2(), as7341.getChannel(AS7341_CHANNEL_CLEAR)};
-    String units[] = { "", " g/kg", " C", " hPa", "", " ppb", "ppm", "" };
+                       ens160.getAQI(), ens160.getTVOC(), ens160.geteCO2(), readings[0],readings[1],
+                       readings[2], readings[3], readings[4], readings[5], readings[6], readings[7],
+                       readings[8], readings[9], readings[10], readings[11]};
+    String units[] = { "", " g/kg", " C", " hPa", "", " ppb", "ppm", "", "", "", "", "", "", "",
+                      "", "", "", "", "" };
 
     Serial.println("Starting sending MQTT...");
 
