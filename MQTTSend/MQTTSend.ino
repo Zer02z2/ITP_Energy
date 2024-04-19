@@ -23,8 +23,8 @@ WiFiClient wifi;
 MqttClient mqtt(wifi);
 
 //WiFi network info: ssid and password
-const char wifi_ssid[] = "sandbox370";
-const char wifi_pass[] = "+s0a+s03!2gether?";
+const char wifi_ssid[] = "NewLabMember 2.4GHz Only";
+const char wifi_pass[] = "!Welcome2NewLab!";
 
 //MQTT broker info: url and port (1883 default for MQTT)
 const char broker[] = "9.tcp.ngrok.io";
