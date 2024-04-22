@@ -26,7 +26,7 @@
 #define DREQ 3  // VS1053 Data request, ideally an Interrupt pin
 
 File myFile;
-
+String getString = "";
 
 /////// WiFi Settings ///////
 char ssid[] = SECRET_SSID;
@@ -89,13 +89,18 @@ void setup() {
 
 void loop() {
   while (client.available()) {
-    int length = client.available();
-    byte buffer[length];
-    client.readBytes(buffer, length);
-    Serial.println(client.available());
-    //char c = client.read();
-    myFile.write(buffer, length);
-    // Serial.write(c);
+
+    if (getString.indexOf("RIFF") == -1) {
+      Serial.println("not found");
+      char c = client.read();
+      getString += c;
+    } else {
+      int length = client.available();
+      byte buffer[length];
+      client.readBytes(buffer, length);
+      Serial.println(client.available());
+      myFile.write(buffer, length);
+    }
   }
   if (musicPlayer.stopped()) {
   }
@@ -120,7 +125,8 @@ void loop() {
     }
 
     if (c == 'g') {
-      if (SD.exists("/report.wav")) {SD.remove("/report.wav");};
+      getString = "";
+      if (SD.exists("/report.wav")) { SD.remove("/report.wav"); };
       Serial.println("connecting to server...");
 
       if (client.connectSSL("io.zongzechen.com", 443)) {
@@ -135,8 +141,9 @@ void loop() {
 
         myFile = SD.open("/report.wav", FILE_WRITE);
         Serial.println("start writing file...");
+        myFile.write("RIFF");
 
-        
+
         //Serial.println("finish writing file");
         //myFile.close();
         //printDirectory(SD.open("/"), 0);
