@@ -27,6 +27,9 @@
 
 File myFile;
 String getString = "";
+int state = 0;
+long requestTime = 0;
+long playStartTime = 0;
 
 /////// WiFi Settings ///////
 char ssid[] = SECRET_SSID;
@@ -88,72 +91,71 @@ void setup() {
 }
 
 void loop() {
-  while (client.available()) {
 
-    if (getString.indexOf("RIFF") == -1) {
-      Serial.println("not found");
-      char c = client.read();
-      getString += c;
+  if (state == 0) {
+    getString = "";
+    if (SD.exists("/report.wav")) { SD.remove("/report.wav"); };  // reset audio file
+    Serial.println("connecting to server...");
+
+    if (client.connectSSL("io.zongzechen.com", 443)) {
+      client.println("GET /getAudio HTTP/1.1");
+      client.println("Host: io.zongzechen.com");
+      Serial.println("Host");
+      client.println("Connection: close");
+      client.println();
+      Serial.println("Request sent");
+
+      while (!client.available()) { delay(1); };  // wait for response;
+
+      myFile = SD.open("/report.wav", FILE_WRITE);
+      Serial.println("start writing file...");
+      myFile.write("RIFF");  // write the wav header
+
+      requestTime = millis();
+      state++;  // move on to writing the file
     } else {
-      int length = client.available();
-      byte buffer[length];
-      client.readBytes(buffer, length);
-      Serial.println(client.available());
-      myFile.write(buffer, length);
+      Serial.println("connection failed");
+      delay(200);  // try again later
     }
-  }
-  if (musicPlayer.stopped()) {
+
   }
 
-  if (Serial.available()) {
-    char c = Serial.read();
+  else if (state == 1) {
+    while (client.available()) {  // if server returns content
 
-    // if we get an 's' on the serial console, stop!
-    if (c == 's') {
-      myFile.close();
-      musicPlayer.stopPlaying();
-    }
-
-    // if we get an 'p' on the serial console, pause/unpause!
-    if (c == 'p') {
-      // if (!musicPlayer.stopped()) {
-      //   musicPlayer.startPlayingFile("/report.wav");
-      //   Serial.println("now playing");
-      // }
-      myFile.close();
-      printDirectory(SD.open("/"), 0);
-    }
-
-    if (c == 'g') {
-      getString = "";
-      if (SD.exists("/report.wav")) { SD.remove("/report.wav"); };
-      Serial.println("connecting to server...");
-
-      if (client.connectSSL("io.zongzechen.com", 443)) {
-        client.println("GET /getAudio HTTP/1.1");
-        client.println("Host: io.zongzechen.com");
-        Serial.println("Host");
-        client.println("Connection: close");
-        client.println();
-        Serial.println("Request sent");
-
-        while (!client.available()) { delay(1); };
-
-        myFile = SD.open("/report.wav", FILE_WRITE);
-        Serial.println("start writing file...");
-        myFile.write("RIFF");
-
-
-        //Serial.println("finish writing file");
-        //myFile.close();
-        //printDirectory(SD.open("/"), 0);
+      if (getString.indexOf("RIFF") == -1) {  // get rid of headers
+        Serial.println("not found");
+        char c = client.read();
+        getString += c;
       } else {
-        Serial.println("connection failed");
+        int length = client.available();
+        byte buffer[length];
+        client.readBytes(buffer, length);
+        Serial.println(client.available());
+        myFile.write(buffer, length);
       }
     }
+
+    if (millis() - requestTime > (60 * 1000)) {
+      Serial.println("Timer zero");
+      myFile.close();  // close the file
+      playStartTime = millis();
+      state++;  // set timeOut of 1 minute
+    }
   }
 
-  delay(100);
+  else if (state == 2) {  // play the audio
+    musicPlayer.startPlayingFile("/report.wav");
+    Serial.println("now playing");
+
+    state++;
+  }
+
+  else if (state == 3) {  // wait for next fetch
+    Serial.println("waiting for next fetch...");
+    delay(2 * 60 * 1000);
+    state = 0;
+  }
 }
 
 
