@@ -2,6 +2,7 @@
 #include <SPI.h>
 #include <Adafruit_VS1053.h>
 #include <SD.h>
+#include <Adafruit_SleepyDog.h>
 #include "arduino_secrets.h"
 
 // define the pins used
@@ -31,6 +32,10 @@ int state = 0;
 long requestTime = 0;
 long playStartTime = 0;
 
+/////// Sleep Settins ///////
+int sleepDuration = 5 * 1000;
+int sleepGoal = 2 * 60 * 1000;
+
 /////// WiFi Settings ///////
 char ssid[] = SECRET_SSID;
 char pass[] = SECRET_PASS;
@@ -49,6 +54,7 @@ Adafruit_VS1053_FilePlayer musicPlayer =
 //Adafruit_VS1053_FilePlayer(SHIELD_RESET, SHIELD_CS, SHIELD_DCS, DREQ, CARDCS);
 
 void setup() {
+  Watchdog.enable(8000);
   Serial.begin(9600);
   Serial.println("Adafruit VS1053 Simple Test");
 
@@ -59,6 +65,7 @@ void setup() {
     // Connect to WPA/WPA2 network:
     status = WiFi.begin(ssid, pass);
   }
+  Watchdog.reset();
 
   if (!musicPlayer.begin()) {  // initialise the music player
     Serial.println(F("Couldn't find VS1053, do you have the right pins defined?"));
@@ -88,11 +95,13 @@ void setup() {
   musicPlayer.useInterrupt(VS1053_FILEPLAYER_PIN_INT);  // DREQ int
 
   //musicPlayer.startPlayingFile("/track002.mp3");
+  Watchdog.reset();
 }
 
 void loop() {
 
   if (state == 0) {
+    Watchdog.reset();
     getString = "";
     if (SD.exists("/report.wav")) { SD.remove("/report.wav"); };  // reset audio file
     Serial.println("connecting to server...");
@@ -107,6 +116,7 @@ void loop() {
 
       while (!client.available()) { delay(1); };  // wait for response;
 
+      Watchdog.reset();
       myFile = SD.open("/report.wav", FILE_WRITE);
       Serial.println("start writing file...");
       myFile.write("RIFF");  // write the wav header
@@ -121,6 +131,9 @@ void loop() {
   }
 
   else if (state == 1) {
+
+    Watchdog.reset();
+
     while (client.available()) {  // if server returns content
 
       if (getString.indexOf("RIFF") == -1) {  // get rid of headers
@@ -139,21 +152,32 @@ void loop() {
     if (millis() - requestTime > (60 * 1000)) {
       Serial.println("Timer zero");
       myFile.close();  // close the file
+
       playStartTime = millis();
+      musicPlayer.startPlayingFile("/report.wav");
+      Serial.println("now playing");
       state++;  // set timeOut of 1 minute
     }
   }
 
   else if (state == 2) {  // play the audio
-    musicPlayer.startPlayingFile("/report.wav");
-    Serial.println("now playing");
+    Watchdog.reset();
 
-    state++;
+    if (musicPlayer.stopped()) {
+      Serial.println("Done playing");
+      state++;
+    }
   }
 
   else if (state == 3) {  // wait for next fetch
     Serial.println("waiting for next fetch...");
-    delay(2 * 60 * 1000);
+    Watchdog.disable(); // go to sleep
+
+    for (int i = 0; i < sleepGoal; i += sleepDuration) {
+      Watchdog.sleep(sleepDuration);
+    }
+    
+    Watchdog.enable(8000);
     state = 0;
   }
 }
