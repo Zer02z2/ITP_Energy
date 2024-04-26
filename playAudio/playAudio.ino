@@ -31,6 +31,7 @@ String getString = "";
 int state = 0;
 long requestTime = 0;
 long playStartTime = 0;
+int ledPin = 14;
 
 /////// Sleep Settins ///////
 int sleepDuration = 5 * 1000;
@@ -55,6 +56,7 @@ Adafruit_VS1053_FilePlayer musicPlayer =
 
 void setup() {
   Watchdog.enable(8000);
+  pinMode(ledPin, OUTPUT);
   Serial.begin(9600);
   Serial.println("Adafruit VS1053 Simple Test");
 
@@ -154,7 +156,10 @@ void loop() {
       myFile.close();  // close the file
 
       playStartTime = millis();
+      digitalWrite(ledPin, HIGH);
+      // musicPlayer.startPlayingFile("/beginning.wav");
       musicPlayer.startPlayingFile("/report.wav");
+      // musicPlayer.startPlayingFile("/ending.wav");
       Serial.println("now playing");
       state++;  // set timeOut of 1 minute
     }
@@ -165,6 +170,7 @@ void loop() {
 
     if (musicPlayer.stopped()) {
       Serial.println("Done playing");
+      digitalWrite(ledPin, LOW);
       state++;
     }
   }
