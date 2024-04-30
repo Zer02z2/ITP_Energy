@@ -157,25 +157,45 @@ void loop() {
 
       playStartTime = millis();
       digitalWrite(ledPin, HIGH);
-      // musicPlayer.startPlayingFile("/beginning.wav");
-      musicPlayer.startPlayingFile("/report.wav");
-      // musicPlayer.startPlayingFile("/ending.wav");
-      Serial.println("now playing");
-      state++;  // set timeOut of 1 minute
+      musicPlayer.startPlayingFile("/beginn~6.wav");
+      Serial.println("now playing beginning.wav");
+      delay(200);
+      state ++;
     }
   }
 
-  else if (state == 2) {  // play the audio
+  else if (state == 2) {  // play the report
     Watchdog.reset();
 
     if (musicPlayer.stopped()) {
-      Serial.println("Done playing");
-      digitalWrite(ledPin, LOW);
-      state++;
+      Serial.println("now playing report.wav");
+      musicPlayer.startPlayingFile("/report.wav");
+      delay(200);
+      state ++;
     }
   }
 
-  else if (state == 3) {  // wait for next fetch
+  else if (state == 3) {
+    Watchdog.reset();
+
+    if (musicPlayer.stopped()) {
+      Serial.println("now playing ending.wav");
+      musicPlayer.startPlayingFile("/ending.wav");
+      delay(200);
+      state ++;
+    }
+  }
+
+  else if (state == 4) {
+    Watchdog.reset();
+    
+    if (musicPlayer.stopped()) {
+      digitalWrite(ledPin, LOW);
+      state ++;
+    }
+  }
+
+  else if (state == 5) {  // wait for next fetch
     Serial.println("waiting for next fetch...");
     Watchdog.disable(); // go to sleep
 
