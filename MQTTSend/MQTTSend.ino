@@ -2,18 +2,20 @@
 #include <WiFiNINA.h>
 #include "Adafruit_SHTC3.h"
 #include <Adafruit_DPS310.h>
+#include <Adafruit_AS7341.h>
 #include <Wire.h>
 #include "ScioSense_ENS160.h"
 #include <Adafruit_SleepyDog.h>
 
 Adafruit_SHTC3 shtc3 = Adafruit_SHTC3();  // humidity
-Adafruit_DPS310 dps;
+Adafruit_DPS310 dps;                      // pressure
 Adafruit_Sensor *dps_pressure = dps.getPressureSensor();
-ScioSense_ENS160 ens160(ENS160_I2CADDR_1);
+ScioSense_ENS160 ens160(ENS160_I2CADDR_1);  //Gas sensor
+Adafruit_AS7341 as7341;                     // light
 
 float count = 0;
-int sleepDuration = 4000;
-int sleepGoal = 80000;
+int sleepDuration = 5000;
+int sleepGoal = 300000;
 
 int sensorSwitch = 2;
 
@@ -21,8 +23,8 @@ WiFiClient wifi;
 MqttClient mqtt(wifi);
 
 //WiFi network info: ssid and password
-const char wifi_ssid[] = "sandbox370";
-const char wifi_pass[] = "+s0a+s03!2gether?";
+const char wifi_ssid[] = "NewLabMember 2.4GHz Only";
+const char wifi_pass[] = "!Welcome2NewLab!";
 
 //MQTT broker info: url and port (1883 default for MQTT)
 const char broker[] = "9.tcp.ngrok.io";
@@ -33,9 +35,12 @@ const char mqtt_user[] = "energy";
 const char mqtt_pass[] = "password";
 
 //the topic this device will publish messages to
-const int numOfTopics = 7;
-const char pubTopic[] = "SolarWall_e/";
-const String subTopics[] = { "count/", "humidity/", "temp/", "pressure/", "AQI/", "TVOC/", "CO2/" };
+const int numOfTopics = 17;
+const char pubTopic[] = "Sun-Watcher-01/";
+const String subTopics[] = { "count/", "humidity/", "temp/", "pressure/", "AQI/", "TVOC/",
+                            "CO2/", "light-415nm/", "light-445nm/", "light-480nm/",
+                            "light-515nm/", "light-555nm/", "light-590nm/", "light-630nm/",
+                            "light-680nm/", "light-clear/", "light-NIR/" };
 
 void setup() {
   Watchdog.enable(8000);
@@ -81,10 +86,15 @@ void loop() {
     dps_pressure->getEvent(&pressure_event);
     ens160.measure(true);
     ens160.measureRaw(true);
+    uint16_t readings[12];
+    as7341.readAllChannels(readings);
 
     float values[] = { count, humidity.relative_humidity, temp.temperature, pressure_event.pressure,
-                       ens160.getAQI(), ens160.getTVOC(), ens160.geteCO2() };
-    String units[] = { "", " g/kg", " C", " hPa", "", "ppb", "ppm" };
+                       ens160.getAQI(), ens160.getTVOC(), ens160.geteCO2(), readings[0],readings[1],
+                       readings[2], readings[3], readings[4], readings[5], readings[6], readings[7],
+                       readings[8], readings[9], readings[10], readings[11]};
+    String units[] = { "", " g/kg", " C", " hPa", "", " ppb", "ppm", "", "", "", "", "", "", "",
+                      "", "", "", "", "" };
 
     Serial.println("Starting sending MQTT...");
 
@@ -166,4 +176,14 @@ void initSensors() {
   Serial.println(ens160.getBuild());
   Serial.print("\tStandard mode ");
   Serial.println(ens160.setMode(ENS160_OPMODE_STD) ? "done." : "failed!");
+
+  // init AS7341
+  if (!as7341.begin()) {
+    Serial.println("Could not find AS7341");
+    while (1) { delay(10); }
+  }
+
+  as7341.setATIME(100);
+  as7341.setASTEP(999);
+  as7341.setGain(AS7341_GAIN_256X);
 }
