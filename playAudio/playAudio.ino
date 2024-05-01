@@ -4,6 +4,7 @@
 #include <SD.h>
 #include <Adafruit_SleepyDog.h>
 #include "arduino_secrets.h"
+#include "Adafruit_Thermal.h"
 
 // define the pins used
 //#define CLK 13       // SPI Clock, shared with SD card
@@ -33,6 +34,9 @@ long requestTime = 0;
 long playStartTime = 0;
 int ledPin = 14;
 
+Adafruit_Thermal printer(&Serial1);
+String report = "";
+
 /////// Sleep Settins ///////
 int sleepDuration = 5 * 1000;
 int sleepGoal = 2 * 60 * 1000;
@@ -58,7 +62,10 @@ void setup() {
   Watchdog.enable(8000);
   pinMode(ledPin, OUTPUT);
   Serial.begin(9600);
+  Serial1.begin(19200);
   Serial.println("Adafruit VS1053 Simple Test");
+  printer.begin();
+  printer.upsideDownOn();
 
   while (status != WL_CONNECTED) {
     Serial.print("Attempting to connect to Network named: ");
@@ -87,7 +94,6 @@ void setup() {
   printDirectory(SD.open("/"), 0);
 
   // Set volume for left, right channels. lower numbers == louder volume!
-  musicPlayer.setVolume(20, 20);
 
   // Timer interrupts are not suggested, better to use DREQ interrupt!
   //musicPlayer.useInterrupt(VS1053_FILEPLAYER_TIMER0_INT); // timer int
@@ -102,6 +108,7 @@ void setup() {
 
 void loop() {
 
+  // request audio file
   if (state == 0) {
     Watchdog.reset();
     getString = "";
@@ -132,6 +139,7 @@ void loop() {
 
   }
 
+  // write audio file
   else if (state == 1) {
 
     Watchdog.reset();
@@ -151,58 +159,111 @@ void loop() {
       }
     }
 
-    if (millis() - requestTime > (60 * 1000)) {
-      Serial.println("Timer zero");
+    if (millis() - requestTime > (30 * 1000)) {
       myFile.close();  // close the file
+      state++;
+    }
+  }
+
+  // request printer text
+  else if (state == 2) {
+    Watchdog.reset();
+    getString = "";
+    Serial.println("connecting to server...");
+
+    if (client.connectSSL("io.zongzechen.com", 443)) {
+      client.println("GET /getPrint HTTP/1.1");
+      client.println("Host: io.zongzechen.com");
+      Serial.println("Host");
+      client.println("Connection: close");
+      client.println();
+      Serial.println("Request sent");
+
+      while (!client.available()) { delay(1); };  // wait for response;
+
+      Watchdog.reset();
+
+      requestTime = millis();
+      state++;  // move on to writing the file
+    } else {
+      Serial.println("connection failed");
+      delay(200);  // try again later
+    }
+  }
+
+  // print printer text
+  else if (state == 3) {
+
+    Watchdog.reset();
+
+    while (client.available()) {  // if server returns content
+
+      char c = client.read();
+      getString += c;
+    }
+
+    if (millis() - requestTime > (5 * 1000)) {
+      Serial.println("Timer zero");
+      int contentStart = getString.indexOf("Time");
+      report = getString.substring(contentStart + 1);
+      Serial.print(report);
 
       playStartTime = millis();
       digitalWrite(ledPin, HIGH);
+      musicPlayer.setVolume(10, 10);
       musicPlayer.startPlayingFile("/beginn~6.wav");
       Serial.println("now playing beginning.wav");
       delay(200);
-      state ++;
+      state++;
     }
   }
 
-  else if (state == 2) {  // play the report
+  // play the report
+  else if (state == 4) {  // play the report
     Watchdog.reset();
 
     if (musicPlayer.stopped()) {
-      Serial.println("now playing report.wav");
+      printer.println(report);
+      musicPlayer.setVolume(30, 30);
       musicPlayer.startPlayingFile("/report.wav");
+      Serial.println("now playing report.wav");
       delay(200);
-      state ++;
+      state++;
     }
   }
 
-  else if (state == 3) {
+  // play the ending music
+  else if (state == 5) {
     Watchdog.reset();
 
     if (musicPlayer.stopped()) {
-      Serial.println("now playing ending.wav");
+      musicPlayer.setVolume(10, 10);
       musicPlayer.startPlayingFile("/ending.wav");
+      Serial.println("now playing ending.wav");
       delay(200);
-      state ++;
+      state++;
     }
   }
 
-  else if (state == 4) {
+  // turn off LED
+  else if (state == 6) {
     Watchdog.reset();
-    
+
     if (musicPlayer.stopped()) {
       digitalWrite(ledPin, LOW);
-      state ++;
+      state++;
     }
   }
 
-  else if (state == 5) {  // wait for next fetch
+  // wait for the next fetch
+  else if (state == 7) {
     Serial.println("waiting for next fetch...");
-    Watchdog.disable(); // go to sleep
+    Watchdog.disable();  // go to sleep
 
     for (int i = 0; i < sleepGoal; i += sleepDuration) {
       Watchdog.sleep(sleepDuration);
     }
-    
+
     Watchdog.enable(8000);
     state = 0;
   }
