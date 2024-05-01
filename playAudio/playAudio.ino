@@ -32,6 +32,7 @@ String getString = "";
 int state = 0;
 long requestTime = 0;
 long playStartTime = 0;
+long printStartTime = 0;
 int ledPin = 14;
 
 Adafruit_Thermal printer(&Serial1);
@@ -65,7 +66,7 @@ void setup() {
   Serial1.begin(19200);
   Serial.println("Adafruit VS1053 Simple Test");
   printer.begin();
-  printer.upsideDownOn();
+  // printer.upsideDownOn();
 
   while (status != WL_CONNECTED) {
     Serial.print("Attempting to connect to Network named: ");
@@ -205,7 +206,7 @@ void loop() {
     if (millis() - requestTime > (5 * 1000)) {
       Serial.println("Timer zero");
       int contentStart = getString.indexOf("Time");
-      report = getString.substring(contentStart + 1);
+      report = getString.substring(contentStart);
       Serial.print(report);
 
       playStartTime = millis();
@@ -223,7 +224,6 @@ void loop() {
     Watchdog.reset();
 
     if (musicPlayer.stopped()) {
-      printer.println(report);
       musicPlayer.setVolume(30, 30);
       musicPlayer.startPlayingFile("/report.wav");
       Serial.println("now playing report.wav");
@@ -240,7 +240,6 @@ void loop() {
       musicPlayer.setVolume(10, 10);
       musicPlayer.startPlayingFile("/ending.wav");
       Serial.println("now playing ending.wav");
-      delay(200);
       state++;
     }
   }
@@ -250,14 +249,24 @@ void loop() {
     Watchdog.reset();
 
     if (musicPlayer.stopped()) {
-      digitalWrite(ledPin, LOW);
-      state++;
+      printer.println(report);
+      printStartTime = millis();
+      state ++;
     }
   }
 
-  // wait for the next fetch
+  // wait to finish printing
   else if (state == 7) {
+    Watchdog.reset();
+    if (millis() - printStartTime > 10 * 1000) {
+      digitalWrite(ledPin, LOW);
+      state ++;
+    }
+  }
+  // wait for the next fetch
+  else if (state == 8) {
     Serial.println("waiting for next fetch...");
+    printer.sleep();
     Watchdog.disable();  // go to sleep
 
     for (int i = 0; i < sleepGoal; i += sleepDuration) {
@@ -265,6 +274,7 @@ void loop() {
     }
 
     Watchdog.enable(8000);
+    printer.wake();
     state = 0;
   }
 }
