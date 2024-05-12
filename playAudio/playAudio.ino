@@ -263,7 +263,13 @@ void loop() {
   else if (state == 7) {
 
     if (musicPlayer.stopped()) {
-      printer.println(report);
+      char text[256];
+      report.toCharArray(text, report.length());
+
+      for (int i = 0; i < report.length(); i++) {
+        printer.print(text[i]);
+      }
+      //printer.println(report);
       printStartTime = millis();
       state ++;
     }
