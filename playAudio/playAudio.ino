@@ -34,6 +34,11 @@ long requestTime = 0;
 long playStartTime = 0;
 long printStartTime = 0;
 int ledPin = 14;
+int ledState = 0;
+int button = A6;
+
+int lastButtonState = 0;
+long lastBlinkTime = 0;
 
 Adafruit_Thermal printer(&Serial1);
 String report = "";
@@ -62,6 +67,8 @@ Adafruit_VS1053_FilePlayer musicPlayer =
 void setup() {
   Watchdog.enable(8000);
   pinMode(ledPin, OUTPUT);
+  pinMode(19, OUTPUT);
+  digitalWrite(19, HIGH);
   Serial.begin(9600);
   Serial1.begin(19200);
   Serial.println("Adafruit VS1053 Simple Test");
@@ -108,10 +115,19 @@ void setup() {
 }
 
 void loop() {
+  Watchdog.reset();
+
+  if (state == 0) {
+    int buttonState = digitalRead(button);
+    if (buttonState == 1 && lastButtonState == 0) {
+      state ++;
+    }
+    lastButtonState = buttonState;
+  }
 
   // request audio file
-  if (state == 0) {
-    Watchdog.reset();
+  else if (state == 1) {
+    blink();
     getString = "";
     if (SD.exists("/report.wav")) { SD.remove("/report.wav"); };  // reset audio file
     Serial.println("connecting to server...");
@@ -124,9 +140,11 @@ void loop() {
       client.println();
       Serial.println("Request sent");
 
-      while (!client.available()) { delay(1); };  // wait for response;
+      while (!client.available()) {
+        blink();
+        delay(1);
+      }  // wait for response;
 
-      Watchdog.reset();
       myFile = SD.open("/report.wav", FILE_WRITE);
       Serial.println("start writing file...");
       myFile.write("RIFF");  // write the wav header
@@ -141,9 +159,8 @@ void loop() {
   }
 
   // write audio file
-  else if (state == 1) {
-
-    Watchdog.reset();
+  else if (state == 2) {
+    blink();
 
     while (client.available()) {  // if server returns content
 
@@ -160,15 +177,15 @@ void loop() {
       }
     }
 
-    if (millis() - requestTime > (30 * 1000)) {
+    if (millis() - requestTime > (20 * 1000)) {
       myFile.close();  // close the file
       state++;
     }
   }
 
   // request printer text
-  else if (state == 2) {
-    Watchdog.reset();
+  else if (state == 3) {
+    blink();
     getString = "";
     Serial.println("connecting to server...");
 
@@ -180,9 +197,10 @@ void loop() {
       client.println();
       Serial.println("Request sent");
 
-      while (!client.available()) { delay(1); };  // wait for response;
-
-      Watchdog.reset();
+      while (!client.available()) { 
+        blink();
+        delay(1); 
+      }  // wait for response;
 
       requestTime = millis();
       state++;  // move on to writing the file
@@ -192,10 +210,9 @@ void loop() {
     }
   }
 
-  // print printer text
-  else if (state == 3) {
-
-    Watchdog.reset();
+  // get printer text
+  else if (state == 4) {
+    blink();
 
     while (client.available()) {  // if server returns content
 
@@ -220,8 +237,7 @@ void loop() {
   }
 
   // play the report
-  else if (state == 4) {  // play the report
-    Watchdog.reset();
+  else if (state == 5) {  // play the report
 
     if (musicPlayer.stopped()) {
       musicPlayer.setVolume(30, 30);
@@ -233,8 +249,7 @@ void loop() {
   }
 
   // play the ending music
-  else if (state == 5) {
-    Watchdog.reset();
+  else if (state == 6) {
 
     if (musicPlayer.stopped()) {
       musicPlayer.setVolume(10, 10);
@@ -245,8 +260,7 @@ void loop() {
   }
 
   // turn off LED
-  else if (state == 6) {
-    Watchdog.reset();
+  else if (state == 7) {
 
     if (musicPlayer.stopped()) {
       printer.println(report);
@@ -256,26 +270,11 @@ void loop() {
   }
 
   // wait to finish printing
-  else if (state == 7) {
-    Watchdog.reset();
+  else if (state == 8) {
     if (millis() - printStartTime > 10 * 1000) {
       digitalWrite(ledPin, LOW);
-      state ++;
+      state = 0;
     }
-  }
-  // wait for the next fetch
-  else if (state == 8) {
-    Serial.println("waiting for next fetch...");
-    printer.sleep();
-    Watchdog.disable();  // go to sleep
-
-    for (int i = 0; i < sleepGoal; i += sleepDuration) {
-      Watchdog.sleep(sleepDuration);
-    }
-
-    Watchdog.enable(8000);
-    printer.wake();
-    state = 0;
   }
 }
 
@@ -304,4 +303,13 @@ void printDirectory(File dir, int numTabs) {
     }
     entry.close();
   }
+}
+
+void blink() {
+  if (millis() - lastBlinkTime > 100) {
+    if (ledState == 0) ledState = 1;
+    else if (ledState == 1) ledState = 0;
+    digitalWrite(ledPin, ledState);
+  }
+  lastBlinkTime = millis();
 }
