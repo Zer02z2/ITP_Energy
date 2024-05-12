@@ -120,6 +120,7 @@ void loop() {
   if (state == 0) {
     int buttonState = digitalRead(button);
     if (buttonState == 1 && lastButtonState == 0) {
+      //musicPlayer.startPlayingFile("/call.wav");
       state ++;
     }
     lastButtonState = buttonState;
@@ -178,7 +179,9 @@ void loop() {
     }
 
     if (millis() - requestTime > (20 * 1000)) {
+      //musicPlayer.startPlayingFile("/call.wav");
       myFile.close();  // close the file
+      musicPlayer.startPlayingFile("/call.wav");
       state++;
     }
   }
@@ -222,13 +225,14 @@ void loop() {
 
     if (millis() - requestTime > (5 * 1000)) {
       Serial.println("Timer zero");
-      int contentStart = getString.indexOf("Time");
+      int contentStart = getString.indexOf("This");
       report = getString.substring(contentStart);
       Serial.print(report);
 
       playStartTime = millis();
       digitalWrite(ledPin, HIGH);
       musicPlayer.setVolume(10, 10);
+      if (musicPlayer.playingMusic) musicPlayer.stopPlaying();
       musicPlayer.startPlayingFile("/beginn~6.wav");
       Serial.println("now playing beginning.wav");
       delay(200);
@@ -263,12 +267,18 @@ void loop() {
   else if (state == 7) {
 
     if (musicPlayer.stopped()) {
-      char text[256];
+      
+      char text[1023];
       report.toCharArray(text, report.length());
 
+      Serial.println(text);
+
+      printer.println("Transcript:");
       for (int i = 0; i < report.length(); i++) {
         printer.print(text[i]);
       }
+      printer.println(" ");
+      printer.println(" ");
       //printer.println(report);
       printStartTime = millis();
       state ++;
